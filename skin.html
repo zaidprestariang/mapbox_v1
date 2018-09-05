@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Mapbox SKIN</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.48.0/mapbox-gl.js'></script>
+        <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.48.0/mapbox-gl.css' rel='stylesheet' />
+        <style>
+            body { margin:0; padding:0; }
+            #map { position:absolute; top:0; bottom:0; width:100%; }
+        </style>
+    </head>
+    <body>
+        <style>
+            #menu {
+                background: #fff;
+                position: absolute;
+                z-index: 1;
+                top: 10px;
+                right: 10px;
+                border-radius: 3px;
+                /*width: 120px;*/
+                border: 1px solid rgba(0,0,0,0.4);
+                font-family: 'Open Sans', sans-serif;
+            }
+
+            #menu a {
+                font-size: 13px;
+                color: #404040;
+                display: block;
+                margin: 0;
+                padding: 0;
+                padding: 10px;
+                text-decoration: none;
+                border-bottom: 1px solid rgba(0,0,0,0.25);
+                text-align: center;
+            }
+
+            #menu a:last-child {
+                border: none;
+            }
+
+            #menu a:hover {
+                background-color: #f8f8f8;
+                color: #404040;
+            }
+
+            #menu a.active {
+                background-color: #3887be;
+                color: #ffffff;
+            }
+
+            #menu a.active:hover {
+                background: #3074a4;
+            }
+        </style>
+        
+        <nav id="menu"></nav>
+        <div id='map' style='width: 100%; height: 800px;'></div>
+
+        <script>
+            mapboxgl.accessToken = 'pk.eyJ1IjoiemFpZDE5ODIiLCJhIjoiY2psaTNjY2xyMWpyZDNqbmozeWRxeWpybyJ9.dIefeBZk4j6bkvqi_sQbFw';
+            var map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v10',
+                zoom: 18,
+                center: [101.652962, 2.911878],
+                pitch: 40,
+                bearing: 20
+            });
+
+            map.on('load', function () {
+                
+                map.setPaintProperty('building', 'fill-color', [
+                    "interpolate",
+                    ["exponential", 0.5],
+                    ["zoom"],
+                    15,
+                    "#e2714b",
+                    22,
+                    "#eee695"
+                ]);
+                
+                map.setPaintProperty('building', 'fill-opacity', [
+                    "interpolate",
+                    ["exponential", 0.5],
+                    ["zoom"],
+                    15,
+                    0,
+                    22,
+                    1
+                ]);
+                
+                map.addLayer({
+                    'id': 'Star Central Polygon',
+                    'type': 'fill',
+                    'source': {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'Feature',
+                            'geometry': {
+                                'type': 'Polygon',
+                                'coordinates': 
+                                [
+                                    [
+                                        [101.653170, 2.911660],
+                                        [101.651540, 2.911660],
+                                        [101.651540, 2.913460],
+                                        [101.652331, 2.913460],
+                                        [101.652331, 2.912460],
+                                        [101.653170, 2.912460],
+                                        [101.653170, 2.911660]
+                                    ]
+                                ]
+                            }
+                        }
+                    },
+                    'layout': {},
+                    'paint': {
+                        'fill-color': '#e2714b',
+                        'fill-opacity': 0.25
+                    }
+                });
+                
+                map.addLayer({
+                    'id': 'Star Central Building',
+                    'type': 'fill-extrusion',
+                    'source': {
+                        'type': 'geojson',
+                        'data': 'data/prestariang-map.json'
+                    },
+                    'paint': {
+                        // Get the fill-extrusion-color from the source 'color' property.
+                        'fill-extrusion-color': ['get', 'color'],
+
+                        // Get fill-extrusion-height from the source 'height' property.
+                        'fill-extrusion-height': ['get', 'height'],
+
+                        // Get fill-extrusion-base from the source 'base_height' property.
+                        'fill-extrusion-base': ['get', 'base_height'],
+
+                        // Make extrusions slightly opaque for see through indoor walls.
+                        'fill-extrusion-opacity': 0.5
+                    }
+                });
+                
+            });
+            
+            var toggleableLayerIds = [ 'Star Central Polygon', 'Star Central Building' ];
+
+            for (var i = 0; i < toggleableLayerIds.length; i++) {
+                var id = toggleableLayerIds[i];
+
+                var link = document.createElement('a');
+                link.href = '#';
+                link.className = 'active';
+                link.textContent = id;
+
+                link.onclick = function (e) {
+                    var clickedLayer = this.textContent;
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    var visibility = map.getLayoutProperty(clickedLayer, 'visibility');
+
+                    if (visibility === 'visible') {
+                        map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+                        this.className = '';
+                    } else {
+                        this.className = 'active';
+                        map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+                    }
+                };
+
+                var layers = document.getElementById('menu');
+                layers.appendChild(link);
+            }
+        </script>
+    </body>
+</html>
